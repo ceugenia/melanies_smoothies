@@ -16,19 +16,17 @@ st.write("The name of your Smoothie will be:", name_on_order)
 cnx = st.connection("snowflake")
 session = cnx.session()
 
+# Pull both FRUIT_NAME and SEARCH_ON
 my_dataframe = session.table("smoothies.public.fruit_options") \
-    .select(col('FRUIT_NAME'))
-# st.dataframe(data=my_dataframe, use_container_width=True)
-# st.stop()
+    .select(col('FRUIT_NAME'), col('SEARCH_ON'))
 
-# Convert the Snowpark Dataframe to a Pandas Dataframe os we can use the LOC function
-pd_df=my_dataframe.to_pandas()
-# st.dataframe(pd_df)
-# st.stop()
+# Convert Snowpark dataframe to Pandas for loc()
+pd_df = my_dataframe.to_pandas()
 
+# Multiselect using fruit names only
 ingredients_list = st.multiselect(
     'Choose up to 5 ingredients:',
-    my_dataframe,
+    pd_df['FRUIT_NAME'].tolist(),
     max_selections=5
 )
 
@@ -40,23 +38,27 @@ if ingredients_list:
 
         ingredients_string += fruit_chosen + ' '
 
-        search_on=pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
-        st.write('The search value for ', fruit_chosen,' is ', search_on, '.')
+        # Get API search value from SEARCH_ON column
+        search_on = pd_df.loc[
+            pd_df['FRUIT_NAME'] == fruit_chosen,
+            'SEARCH_ON'
+        ].iloc[0]
+
+        st.write(
+            'The search value for',
+            fruit_chosen,
+            'is',
+            search_on,
+            '.'
+        )
 
         st.subheader(fruit_chosen + ' Nutrition Information')
-
-        search_df = session.table("smoothies.public.fruit_options") \
-            .filter(col("FRUIT_NAME") == fruit_chosen) \
-            .select(col("SEARCH_ON")) \
-            .collect()
-
-        search_on = search_df[0]["SEARCH_ON"]
 
         smoothiefroot_response = requests.get(
             f"https://my.smoothiefroot.com/api/fruit/{search_on}"
         )
 
-        sf_df = st.dataframe(
+        st.dataframe(
             smoothiefroot_response.json(),
             use_container_width=True
         )
