@@ -1,0 +1,16 @@
+definition_version: 2
+
+entities:
+
+  smoothie_app:
+    type: streamlit
+    identifier:
+      name: SMOOTHIE_APP
+      database: SMOOTHIES
+      schema: ANALYTICS
+
+    stage: STREAMLIT_STAGE
+
+    query_warehouse: SMOOTHIE_WH
+
+    main_file: app/streamlit_app.py

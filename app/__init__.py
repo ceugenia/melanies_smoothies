@@ -1,0 +1,1 @@
+"""Snowflake Smoothie Analytics application."""
